@@ -16,9 +16,11 @@ for res in socket.getaddrinfo(
     except OSError as msg:
         s = None
         continue
+    s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     try:
         s.bind(sa)
         s.listen(5)
+        print(f"Server is listening on port:{PORT}")
     except OSError as msg:
         s.close()
         s = None
@@ -31,7 +33,5 @@ conn, addr = s.accept()
 with conn:
     while True:
         data = conn.recv(1024)
-        if not data:
-            break
-        data = data.decode().upper()
+        data = data.upper()
         conn.send(data)

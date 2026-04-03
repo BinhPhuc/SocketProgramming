@@ -23,8 +23,12 @@ for res in socket.getaddrinfo(HOST, PORT, socket.AF_UNSPEC, socket.SOCK_STREAM):
 if s is None:
     print("could not open socket")
     sys.exit(1)
+    
 with s:
-    msg = input("Enter message to send: ")
+  while True:
+    msg = input("Enter message to send. Type 'exit' to quit: ")
+    if msg.lower() == 'exit':
+        break
     s.sendall(msg.encode())
-    data = s.recv(1024)
-print("Received", repr(data))
+    data = s.recv(1024).decode()
+    print("Received", data)
