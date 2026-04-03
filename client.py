@@ -1,34 +1,15 @@
 import socket
-import sys
 from utils.load_config import app_config as config
 
 PORT = config["server"]["port"]
 HOST = config["server"]["host"]
 
-s = None
-for res in socket.getaddrinfo(HOST, PORT, socket.AF_UNSPEC, socket.SOCK_STREAM):
-    af, socktype, proto, canonname, sa = res
-    try:
-        s = socket.socket(af, socktype, proto)
-    except OSError as msg:
-        s = None
-        continue
-    try:
-        s.connect(sa)
-    except OSError as msg:
-        s.close()
-        s = None
-        continue
-    break
-if s is None:
-    print("could not open socket")
-    sys.exit(1)
-    
-with s:
-  while True:
-    msg = input("Enter message to send. Type 'exit' to quit: ")
-    if msg.lower() == 'exit':
-        break
-    s.sendall(msg.encode())
-    data = s.recv(1024).decode()
-    print("Received", data)
+with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+    s.connect((HOST, PORT))
+    while True:
+        msg = input("Enter message to send. Type 'exit' to quit: ")
+        if msg.lower() == 'exit':
+            break
+        s.sendall(msg.encode())
+        data = s.recv(1024).decode()
+        print("Received", data)
