@@ -40,7 +40,28 @@ def parse_response(response):
     header_text = header_bytes.decode("utf-8", errors="ignore")
     header_lines = header_text.split("\r\n") if header_text else []
     status_line = header_lines[0] if header_lines else ""
-    return status_line, body
+
+    headers = {}
+    for line in header_lines[1:]:
+        if ":" not in line:
+            continue
+        key, value = line.split(":", 1)
+        headers[key.strip().lower()] = value.strip()
+
+    return status_line, headers, body
+
+
+def is_text_content(content_type):
+    media_type = content_type.split(";", 1)[0].strip().lower()
+    return media_type.startswith("text/") or media_type in {
+        "application/json",
+        "application/javascript",
+        "application/xml",
+    }
+
+
+def print_text_content(body):
+    print(body.decode("utf-8", errors="replace"))
 
 
 def save_file(filename, content):
@@ -65,11 +86,15 @@ def main():
         print(f"Connection failed: {exc}")
         return
 
-    status_line, body = parse_response(response)
+    status_line, headers, body = parse_response(response)
 
     if "200 OK" in status_line:
-        saved_path = save_file(args.filename, body)
-        print(f"Downloaded file to {saved_path}")
+        content_type = headers.get("content-type", "")
+        if is_text_content(content_type):
+            print_text_content(body)
+        else:
+            saved_path = save_file(args.filename, body)
+            print(f"Downloaded file to {saved_path}")
     else:
         print(status_line or "Invalid response from server")
         if body:
